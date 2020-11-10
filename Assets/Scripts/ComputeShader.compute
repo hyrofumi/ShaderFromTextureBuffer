@@ -1,0 +1,41 @@
+﻿ #pragma kernel calc
+ RWTexture2D<float4> buffer;
+ RWTexture2D<float4> colorTexture;
+
+ StructuredBuffer<float> PositionBuffer;
+ StructuredBuffer<float> ColorBuffer;
+
+ float time;
+ // 解像度
+float2 resolution;
+
+
+ [numthreads(8,1,1)]
+ void calc (uint3 id : SV_DispatchThreadID)
+ {
+    float w, h;
+    buffer.GetDimensions(w, h);
+    float2 uv = float2(id.x/w, id.y/h);
+
+    uint i = w * id.y + id.x;
+    float4 p = float4(
+        PositionBuffer[i * 3 + 0],
+        PositionBuffer[i * 3 + 1],
+        PositionBuffer[i * 3 + 2],
+        PositionBuffer[i * 4 + 3]
+        // 1
+    );
+
+    float alpha = ColorBuffer[i * 4 + 3];
+
+    float4 col = float4(
+        ColorBuffer[i * 3 + 0],
+        ColorBuffer[i * 3 + 1],
+        ColorBuffer[i * 3 + 2],
+        alpha
+        // abs(sin(alpha + time))
+    );
+
+    buffer[id.xy] = p;
+    colorTexture[id.xy] = col;
+ }
